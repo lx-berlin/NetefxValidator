@@ -505,7 +505,7 @@ class NetefxValidatorRule {
 		
 		
 		/**
-         * Validierung einer UNIQUE-Regel
+         * Validierung einer UNIQUE-Regel 
          * Überprüft, ob es noch keinen ANDEREN Eintrag gibt, bei dem das übergebene Feld der übergebenen Klasse diesen Wert hat
          * 
          * Beispiel:  
