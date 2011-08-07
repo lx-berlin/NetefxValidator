@@ -513,11 +513,11 @@ class NetefxValidatorRule {
          * 
          */
         function validateUnique($data) {
-        	$new_value = $data[$this->field];
-            $field_name = $this->args[0];
-			$class_name = $this->args[1];
+        	$new_value  = Convert::raw2sql($data[$this->field]);
+            $field_name = Convert::raw2sql($this->args[0]);
+			$class_name = Convert::raw2sql($this->args[1]);
         	if (isset($data["ID"])) {
-        		$other_entry = DataObject::get($class_name,"".$field_name." = '".$new_value."' AND ".$class_name.".ID<>".$data["ID"]); 
+        		$other_entry = DataObject::get($class_name,"".$field_name." = '".$new_value."' AND ".$class_name.".ID<>".(int)$data["ID"]); 
         	}
             else {
             	$other_entry = DataObject::get($class_name,"".$field_name." = '".$new_value."'");     	
