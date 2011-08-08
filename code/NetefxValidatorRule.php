@@ -1,12 +1,5 @@
 <?php
 
-/**
-* RuleClass for NetefxValidator
-* 
-* @version 0.46
-* @package NetefxValidator
-*/
-
 // basic rules
 define("NV_REQUIRED", "REQUIRED");
 define("NV_EMPTY", "EMPTY");
@@ -47,67 +40,81 @@ define("NV_UNIQUE","UNIQUE");
 define("NV_FUNCTION","FUNCTION");
 
 
-
-class NetefxValidatorRule {
+/**
+* RuleClass for NetefxValidator
+* 
+* @todo unit tests
+* @todo test examples
+* @todo test validateFUNCTION
+* 
+* @version 0.46
+* @package NetefxValidator
+*/
+class NetefxValidatorRule extends Object {
 		protected $field;
 		protected $type;
 		protected $args;		
 		protected $errorMsg;
 		protected $errorMsgType;
-
+		
 		/**
-		 * Gibt das Feld zurück, zu dem diese Regel gehört
+		 * @return string the field which this rule belongs to
 		 */		
-		function field(){
+		public function field(){
 			return $this->field;
 		}
-
+		
 		/**
-		 * Gibt die Fehlermeldung zu dieser Regel zurück
+		 * @return string the error message of this rule
 		 */	
-		function errorMsg(){
+		public function errorMsg(){
 			return $this->errorMsg;
 		}
-
+		
 		/**
-		 * Gibt den Typ der Fehlermeldung zu dieser Regel zurück
+		 * @return string the error message type of this rule
 		 */	
-		function errorMsgType(){
+		public function errorMsgType(){
 			return $this->errorMsgType;
 		}
-
+		
 		/**
-		 * Der Konstruktor erwartet folgende Argumente:
-		 * - das Feld, für das die Regel gilt
-		 * - der Typ der Regel (erlaubt: "BETWEEN", "EQUALS", "GREATER", "GREATEREQUAL", "OR", "REGEXP",
-		 *  "REQUIRED", "EMPTY", "SMALLER", "SMALLEREQUAL", "TEXTEQUALS", "FUNCTION"
-		 * - ein Array mit den (typspezifischen) Argumenten der Regel
-		 * - die Fehlermeldung, die angezeigt werden soll, wenn die Regel nicht erfüllt ist
-		 * - Typ der Fehlermeldung (zb: error, required, good, ...)
+		 * @param string $field name of the field
+		 * @param string $type (use NV_* constants defined in NetefxValidatorRule.php)
+		 * @param string|array $args additional arguments needed in speical rules like FUNCTION 
+		 * @param string $errorMsg the message to be displayed
+		 * @param string $errorMsgType the css class added to the field on validation error
 		 */
-		function __construct($field, $type, $args, $errorMsg, $errorMsgType = "error") {	
-			$this->field= $field;
-			$this->type= $type;
-			$this->args= $args;
-			$this->errorMsg= $errorMsg;
-			$this->errorMsgType= $errorMsgType;
+		function __construct($field, $type = NV_REQUIRED, $args = '', $errorMsg = '', $errorMsgType = 'error') {	
+			parent::__construct();
+			$this->field = $field;
+			$this->type = $type;
+			$this->args = (is_array($args))?$args:array($args);
+			$this->errorMsg = $errorMsg;
+			$this->errorMsgType = $errorMsgType;
 		}
-
+		
 		/**
 		 * Wertet den übergebenen Ausdruck aus, wobei Namen von anderen Feldern in die Zeichen @ und ~ eingeschlossen sind.
 		 * Aus Sicherheitsgründen und da nur mit Zahlen gerechnet werden kann, muss unbedingt vorher checkNumeric() aufgerufen werden.
-		 */		
-		function evaluate($data,$expr) {
+		 * @todo translate comment
+		 * @param array $data
+		 * @param string $expr
+		 * @return string
+		 */
+		protected function evaluate($data,$expr) {
             $expr = str_replace ('@','$data["',$expr);
 			$expr = str_replace ('~','"]',$expr);
 			$expr = "return ".$expr.";";
 			return eval($expr);
 		}
-
+		
 		/**
-		 * Überprüft, ob die im Ausdruck enthaltenen Felder nur Zahlen enthalten
+		 * @param array $data
+		 * @param string $expr
+		 * @return boolean
 		 */
-		function checkNumeric($data,$expr) {			
+		protected function checkNumeric($data,$expr) {			
 			$pos = -1;
 			$pos2 = -1;
 			do {
@@ -115,421 +122,412 @@ class NetefxValidatorRule {
 				$pos2 = strpos ($expr,'~', $pos2+1);
 				if ($pos !== false) {
 					$fieldname = substr ($expr,$pos+1,$pos2-$pos-1);
-					if (!is_numeric($data[$fieldname])) {		
+					if (!is_numeric($data[$fieldname]))		
 						return false;
-					}
-				}
-				else {
+				} else {
 					return true;
 				}
-				
 			}
 			while (true);
 		}
-
+		
         /**
-        * wandelt z.B. deutsche Zahleneingaben ins englische Format um
+        * converts custom number format to english number format (eg: german uses , instead of . for the decimal seperator)
         * 
         * @param string $number
-        * @param string $separator ("." oder ",")
+        * @param string $separator (eg: "." or ",")
         */
-		function numberFormatConversion($number, $separator) {
-            
+		protected function numberFormatConversion($number, $separator) {
 			if (preg_match("/^[0-9".$separator."]{1,}$/", $number)>0) {
 				$number = str_replace($separator,".",$number);           
 	            return $number;
-			}
-			
-			else {
-				return false;
-			}
-			
+			} 
+			return false;			
         }
-
+        
 		/**
-		 * Validiert die Regel anhand der übergebenen Daten
+		 * Calls the particular validation function for the given type
+		 * @throws user_error if validation rule type does not exists
+		 * @param array $data
+		 * @return boolean
 		 */
-		function validate($data){
+		public function validate($data){
 			$method_name = "validate{$this->type}";
-			if (method_exists($this, $method_name)) {
+			if ($this->hasMethod($method_name))
 				return $this->$method_name($data);
-			}     
-			else {				
-				$this->errorMsg = "Der Typ ".$this->type." wird (noch) nicht unterstützt.";
-				return false;
-			}
+			user_error("The validation rule type '{$this->type}' is not yet supported.");
 		}
-
-		/**
-         * Validierung einer REQUIRED-Regel
-         * Überprüft, ob überhaupt etwas in das Feld eingetragen ist
-         * 
-         * Beispiel:  
-         * $rule_vorname_1 = new NetefxValidatorRule("Vorname", "REQUIRED", "", "Vorname fehlt (Pflichtfeld)");
-         * 
-         */
-        function validateRequired($data) {
-            return ($data[$this->field] != '');
-        }
-
+		
         /**
-         * Validierung einer EMPTY-Regel
-         * Überprüft, ob nichts ins Feld eingetragen ist
-         * 
-         * Beispiel:  
-         * analog zu REQUIRED (Verwendung meistens in Kombination mit OR)
-         * 
+         * Check if the given field is filled out
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule("FirstName", NV_REQUIRED, null, "FirstName is required");
+         * @param array $data
+         * @return boolean
          */
-        function validateEmpty($data) {
+        protected function validateREQUIRED($data) {
+            return (trim($data[$this->field]) != '');
+        }
+        
+        /**
+         * Empty Check on given field, returned true if the field is empty
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule("SomeField", NV_EMPTY, null, "this field should be empty");
+         * @param array $data
+         * @return boolean
+         */
+        protected function validateEMPTY($data) {
             return ($data[$this->field] == '');
         }
-
+        
         /**
-         * Validierung einer EXISTS-Regel
-         * Überprüft, ob es das Feld überhaupt gibt im Formular
-         * Sinnvoll für IMPLIES Verknüpfungen
-         * 
-         * Beispiel:  
-         * $rule_emailSenden_Exists             = new NetefxValidatorRule ("emailSenden",  "EXISTS", "", "");
-         * $rule_emailSenden_Required           = new NetefxValidatorRule ("emailSenden",  "REQUIRED", "", ""); 
-         * $rule_emailSenden_Exists_Required    = new NetefxValidatorRule ("emailSenden",  "IMPLIES", array($rule_emailSenden_Exists, $rule_emailSenden_Required), "Bitte wählen Sie emailSenden aus.");
-         * 
+         * Check if given field exists on the form
+         * Called by $this->validate()
+         * @example $ruleEXISTS = new NetefxValidatorRule('email',  NV_EXISTS); <br> $ruleREQUIRED = new NetefxValidatorRule ('email',  NV_REQUIRED); <br> $rule = new NetefxValidatorRule ("email",  "IMPLIES", array($ruleEXISTS, $ruleREQUIRED), "This field is required"); 
+         * @param array $data
+         * @return boolean
          */
-        function validateExists($data) {
+        protected function validateEXISTS($data) {
 	        return (isset($data[$this->field]));
         }
-
+        
         /**
-		 * Validierung einer OR-Regel
-		 * Überprüft, ob mindestens eine der Subregeln, aus denen diese Regel besteht, gültig sind.
-		 * Beispiel: $rule_id_3 = new NetefxValidatorRule("Name", "OR", array($rule_id_1,$rule_id_2), "ID muss mind. 3 Zeichen haben (oder leer sein)"); 
-		 */
-		function validateOr($data) {
-			foreach ($this->args as $rule) {
-				if ($rule->validate($data)) {
+         * Check if at least 1 of the subrules is valid (subrules are passed as a array to the args param)
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule ('FieldName',  NV_OR, array($rule1, $rule2), 'This field must contain at least 3 characters or be empty'); 
+         * @param array $data
+         * @return boolean
+         */
+		protected function validateOR($data) {
+			foreach ($this->args as $rule)
+				if ($rule->validate($data))
 					return true;
-				}
-			}  
 			return false;
 		}
-
+		
         /**
-		 * Validierung einer AND-Regel
-		 * Überprüft, ob alle Subregeln, aus denen diese Regel besteht, gültig sind.
-		 * Beispiel:  $rule_firma_5 = new NetefxValidatorRule("Firma",   "AND",   array($rule_firma_2,$rule_firma_3, $rule_firma_4), "Firma muss 'Netefx', 'Internet' und 'Services' enthalten.");  
-		 */
-		function validateAnd($data) {
-			foreach ($this->args as $rule) {
-				if (!($rule->validate($data))) {
+         * Check if all of the subrules are valid (subrules are passed as a array to the args param)
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule ('FieldName',  NV_AND, array($rule1, $rule2), 'This field must contain at least 3 characters and contain the word "Netefx"'); 
+         * @param array $data
+         * @return boolean
+         */
+		protected function validateAND($data) {
+			foreach ($this->args as $rule)
+				if (!($rule->validate($data)))
 					return false;
-				}
-			}  
 			return true;
 		}
-
+		
         /**
-		 * Validierung einer NOT-Regel
-		 * Überprüft, ob die Subregeln, aus denen diese Regel besteht, nicht erfüllt ist.
-		 * Beispiel: $rule_name_2 = new NetefxValidatorRule("Name",   "NOT",   array($rule_name_1), "Name darf nicht 'Schulz' enthalten.");  
-		 */
-		function validateNot($data) {
+         * returns true if the subrule is not valid
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule ('Username',  NV_NOT, $subRule, 'Your Username can not contain "Testuser"'); 
+         * @param array $data
+         * @return boolean
+         */
+		protected function validateNOT($data) {
 			return (!($this->args[0]->validate($data)));
 		}
-
-        /**
-		 * Validierung einer IMPLIES-Regel
-		 * Überprüft, ob nachfolgende Bedingung erfüllt ist: wenn die erste Regel erfüllt ist, muss es auch die zweite sein.
-		 * Beispiel: $rule_name_4 = new NetefxValidatorRule("Name",   "IMPLIES",   array($rule_anrede_1, $rule_name_3), "Wenn Anrede 'Herr' ist, muss Name auch 'Herr' enthalten"); 
-		 */
-		function validateImplies($data) {
-			if ($this->args[0]->validate($data)) {
-				return ($this->args[1]->validate($data));
-			}
-			else {
-				return true;
-			}
-		}
-
-        /**
-		 * Validierung einer XOR-Regel
-		 * Überprüft, ob nachfolgende Bedingung erfüllt ist: entweder die erste Regel oder die zweite muss erfüllt sein (aber nicht beide)
-		 * Beispiel: $rule_name_4 = new NetefxValidatorRule("Name",   "XOR",   array($rule_anrede_1, $rule_name_3), "Wenn Anrede 'Herr' ist, muss Name auch 'Herr' enthalten"); 
-		 */
-		function validateXOR($data) {
-			if ($this->args[0]->validate($data)) {
-				return (!($this->args[1]->validate($data)));
-			}
-			else {
-				return ($this->args[1]->validate($data));
-			}
-		}
-
+		
 		/**
-		 * Validierung einer GREATER-Regel
-		 * Überprüft, ob der Inhalt des Feldes numerisch ist und größer als der angegebene Ausdruck
-		 * 
-		 *  Beispiel 1: $rule_anzahl_1 = new NetefxValidatorRule("Anzahl", "GREATER", array('10'),  "Anzahl muss mindestens 10 sein");
-		 *  Beispiel 2:	$rule_c_1      = new NetefxValidatorRule("C",      "GREATER", array('2*@A~+@B~'), "C>2*A+B muss erfüllt sein");
-		 * 
-		 */
-		function validateGreater($data) {
-  			
+         * Check if first rule is valid the second needs to be valid as well. If first rule is not valid true will be returned.
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule ('Username',  NV_IMPLIES, array($subRule1, $subRule2), 'If you choose credit card as payment method, it is required to enter your credit card number'); 
+         * @param array $data
+         * @return boolean
+         */		
+		protected function validateIMPLIES($data) {
+			if ($this->args[0]->validate($data))
+				return ($this->args[1]->validate($data));
+			return true;
+		}
+		
+		/**
+         * returns true if exactly 1 of the subrules is valid, more or less will return false 
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule ('FieldName',  NV_XOR, array($subRule1, $subRule2, $subRule3, ...), 'Please choose exactly 1 option.'); 
+         * @param array $data
+         * @return boolean
+         */		
+		protected function validateXOR($data) {
+			$valid = false;
+			foreach ($this->args as $rule) {
+				if ($rule->validate($data)) {
+					if ($valid) return false;
+					$valid = true;
+				}
+			}
+			return $valid;
+		}
+		
+		/**
+         * check if field value is numeric and greater than the given value or expression (if args is passed as array, the 2nd value in the array can set what character is used as decimal point)
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule ('FieldName',  NV_GREATER, 10, 'Insert a number greater than 10'); 
+         * @example $rule = new NetefxValidatorRule ('FieldName',  NV_GREATER, array(10, ','), 'Insert a number greater than 10 and use "," as decimal seperator');
+         * @example $rule = new NetefxValidatorRule ('C',  NV_GREATER, '2*@A~+@B~', 'C > must be greater than "2 * FieldA + FieldB"'); 
+         * @todo the first couple of lines are the same for all greater and smaller validations, they should be moved to a seperated function
+         * @param array $data
+         * @return boolean
+         */	
+		protected function validateGREATER($data) {  		
             $data[$this->field] = $this->numberFormatConversion($data[$this->field], (isset($this->args[1]) ? $this->args[1] : "."));
-            
-            if (!is_numeric($data[$this->field])) {		
+            if (!is_numeric($data[$this->field]))	
 				return false;    
-			}
-			if (!$this->checkNumeric($data,$this->args[0])) {
+			if (!$this->checkNumeric($data,$this->args[0]))
 				return false;
-			}
-			
 			return ($data[$this->field] > $this->evaluate($data,$this->args[0]));
-		} 
-
+		}
+        
+        
         /**
-         * Validierung einer GREATEREQUAL-Regel
-         * Überprüft, ob der Inhalt des Feldes numerisch ist und größer gleich dem angegebenen Ausdruck
-         * 
-         * Beispiel: analog zu GREATER
+         * Check if field value is numeric and greater or equal to the given value or expression
+         * @example see NetefxValidator::validateGREATER() for examples
          */
-        function validateGreaterEqual($data) {
+        protected function validateGREATEREQUAL($data) {
             $data[$this->field] = $this->numberFormatConversion($data[$this->field], (isset($this->args[1]) ? $this->args[1] : "."));
-            if (!is_numeric($data[$this->field])) {        
-                return false;
-            }
-            if (!$this->checkNumeric($data,$this->args[0])) {
-                return false;
-            }
+            if (!is_numeric($data[$this->field]))	
+				return false;    
+			if (!$this->checkNumeric($data,$this->args[0]))
+				return false;
             return ($data[$this->field] >= $this->evaluate($data,$this->args[0]));
         }
-
+        
         /**
-		 * Validierung einer SMALLER-Regel
-		 * Überprüft, ob der Inhalt des Feldes numerisch ist und kleiner als der angegebene Ausdruck
-		 * 
-         * Beispiel: analog zu GREATER
-		 */
-		function validateSmaller($data) {
-			
+         * Check if field value is numeric and smaller than the given value or expression
+         * @example see NetefxValidator::validateGREATER() for examples
+         */
+		protected function validateSMALLER($data) {
             $data[$this->field] = $this->numberFormatConversion($data[$this->field], (isset($this->args[1]) ? $this->args[1] : "."));
-            
-            if (!is_numeric($data[$this->field])) {		
+            if (!is_numeric($data[$this->field]))	
+				return false;    
+			if (!$this->checkNumeric($data,$this->args[0]))
 				return false;
-			}
-			if (!$this->checkNumeric($data,$this->args[0])) {
-				return false;
-			}
 			return ($data[$this->field] < $this->evaluate($data,$this->args[0]));
 		}
-
-		/**
-		 * Validierung einer SMALLEREQUAL-Regel
-		 * Überprüft, ob der Inhalt des Feldes numerisch ist und kleiner gleich dem angegebenen Ausdruck
-		 * 
-         * Beispiel: analog zu GREATER
-		 */
-		function validateSmallerEqual($data) {
-			
-            $data[$this->field] = $this->numberFormatConversion($data[$this->field], (isset($this->args[1]) ? $this->args[1] : "."));
-            
-            if (!is_numeric($data[$this->field])) {		
+		
+        /**
+         * Check if field value is numeric and smaller or equal to the given value or expression
+         * @example see NetefxValidator::validateGREATER() for examples
+         */
+		protected function validateSMALLEREQUAL($data) {
+			$data[$this->field] = $this->numberFormatConversion($data[$this->field], (isset($this->args[1]) ? $this->args[1] : "."));
+            if (!is_numeric($data[$this->field]))	
+				return false;    
+			if (!$this->checkNumeric($data,$this->args[0]))
 				return false;
-			}
-			if (!$this->checkNumeric($data,$this->args[0])) {
-				return false;
-			}
 			return ($data[$this->field] <= $this->evaluate($data,$this->args[0]));
 		}
-
-		/**
-		 * Validierung einer EQUALS-Regel
-		 * Überprüft, ob der Inhalt des Feldes numerisch ist und gleich dem angegebenen Ausdruck
-		 * 
-		 * Beispiel: analog zu GREATER
-		 */
-		function validateEquals($data) {
-			
-            $data[$this->field] = $this->numberFormatConversion($data[$this->field], (isset($this->args[1]) ? $this->args[1] : "."));
-            
-            if (!is_numeric($data[$this->field])) {		
+		
+        /**
+         * Check if field value is numeric and equal to the given value or expression
+         * @example see NetefxValidator::validateGREATER() for examples
+         * @see NetefxValidatorRule::validateTEXTIS() for text equals validation
+         */
+		protected function validateEQUALS($data) {
+			$data[$this->field] = $this->numberFormatConversion($data[$this->field], (isset($this->args[1]) ? $this->args[1] : "."));
+            if (!is_numeric($data[$this->field]))	
+				return false;    
+			if (!$this->checkNumeric($data,$this->args[0]))
 				return false;
-			}
-			if (!$this->checkNumeric($data,$this->args[0])) {
-				return false;
-			}
 			return ($data[$this->field] == $this->evaluate($data,$this->args[0]));
 		}
-
+		
 		/**
-		 * Validierung einer BETWEEN-Regel
-		 * Überprüft, ob der Inhalt des Feldes numerisch ist und zwischen den angegebenen Ausdrücken (Grenzen eingeschlossen) liegt
-		 * 
-		 * $rule_anzahl_1 = new NetefxValidatorRule("Anzahl", "BETWEEN", array('10','20'), "Anzahl muss zwischen 10 und 20 liegen");
-		 * 
-		 */
-		function validateBetween($data) {
-			
+         * check if field value is numeric and between the 2 given values or expressions (the 3rd value in the args array can set what character is used as decimal point)
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule ('Number',  NV_BETWEEN, array('10','20'), 'Insert a number btween 10 and 20'); 
+         * @example $rule = new NetefxValidatorRule ('Number',  NV_BETWEEN, array(10,'20' ','), 'Insert a number btween 10 and 20, use "," as decimal seperator');
+         * @param array $data
+         * @return boolean
+         */	
+		protected function validateBETWEEN($data) { 
             $data[$this->field] = $this->numberFormatConversion($data[$this->field], (isset($this->args[2]) ? $this->args[2] : "."));
-            
-            if (!is_numeric($data[$this->field])) {		
+            if (!is_numeric($data[$this->field]))	
 				return false;
-			}
-			if (!$this->checkNumeric($data,$this->args[0])) {
+			if (!$this->checkNumeric($data,$this->args[0]))
 				return false;
-			}
-			if (!$this->checkNumeric($data,$this->args[1])) {
+			if (!$this->checkNumeric($data,$this->args[1]))
 				return false;
-			}
 			return (($data[$this->field] <= $this->evaluate($data,$this->args[1])) &&
 			        ($data[$this->field] >= $this->evaluate($data,$this->args[0])));
 		}
-
+		
 		/**
-		 * Validierung einer REGEXP-Regel
-		 * Überprüft, ob der Inhalt des Feldes dem angegebenen regulären Ausdruck gehorcht
-		 * 
-		 * Beispiel: $rule_name_1  = new NetefxValidatorRule("Name",  "REGEXP", array("/^.{2,}$/"), "Name fehlt/ist fehlerhaft (Pflichtfeld)");
-		 */
-		function validateRegExp($data) {
-			return preg_match($this->args[0], $data[$this->field])>0;
+		 * Check if the given expression matches
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule('Name',  NV_REGEXP, '/^.{2,}$/', 'This field is required'); 
+         * @param array $data
+         * @return boolean
+         */	
+		protected function validateREGEXP($data) {
+			return preg_match($this->args[0], $data[$this->field]) > 0;
 		}
-
+		
 		/**
-		 * Validierung einer TEXTEQUALS-Regel
-		 * Überprüft, ob der Inhalt des Feldes dem Inhalt des angegebenen Feldes entspricht
-		 * 
-		 * Beispiel: $rule_passwort2_1 = new NetefxValidatorRule("Passwort2", "TEXTEQUALS", array('Passwort'), "Passwort und Passwort2 sind nicht identisch");
-		 */
-		function validateTextEquals($data) {
+		 * Check if 2 fields are equal
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule('Password2', NV_TEXTEQUALS, 'Password', 'Password und Password2 need to match');
+         * @param array $data
+         * @return boolean
+         */	
+		protected function validateTEXTEQUALS($data) {
 			return (strcmp($data[$this->field],$data[$this->args[0]])==0);
 		}
 
 		/**
-		 * Validierung einer TEXTIS-Regel
-		 * Überprüft, ob der Inhalt des Feldes exakt dem angegebenen Text entspricht
-		 * 
-		 * Beispiel: $rule_firma_1 = new NetefxValidatorRule("Firma",   "TEXTIS",   array('Netefx'), "Firma muss Netefx sein.");  
-		 */
-		function validateTextIs($data) {
+		 * Check if the field is equal to a string
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule('Company', NV_TEXTIS, 'Netefx', 'Company must be "Netefx"');
+         * @param array $data
+         * @return boolean
+         */	
+		protected function validateTEXTIS($data) {
 			return (strcmp($data[$this->field],$this->args[0])==0);
 		}
-
+		
 		/**
-		 * Validierung einer TEXTCONTAINS-Regel
-		 * Überprüft, ob der Inhalt des Feldes den angegebenen Text enthält
-		 * 
-		 * Beispiel: $rule_firma_2 = new NetefxValidatorRule("Firma",   "TEXTCONTAINS",   array('Netefx'), "Firma muss Netefx enthalten.");  
-		 */
-		function validateTextContains($data) {
+		 * Check if the field contains a string
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule('Company', NV_TEXTCONTAINS, 'Netefx', 'Company must contain "Netefx"');
+         * @param array $data
+         * @return boolean
+         */	
+		protected function validateTEXTCONTAINS($data) {
 			$pos = strpos ($data[$this->field],$this->args[0]);
 			return ($pos !== false);
 		}
 
 		/**
-		 * Validierung einer ISONEFROM-Regel
-		 * Überprüft, ob der Inhalt des Feldes exakt einem der angegebenen Texte entspricht
-		 * 
-		 * Beispiel: $rule_OnlyParisAndBerlin = new NetefxValidatorRule("Flat", "ISONEFROM", array("Paris","Berlin"), "Only Paris and Berlin are available at the moment.");
-		 */
-		function validateIsOneFrom($data) {
-			foreach ($this->args as $text) {
-				if (strcmp($data[$this->field],$text)==0) {
-					return true;
-				}
-			}
+		 * Check if the field is equal to one of the given strings
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule('Flat', NV_ISONEFROM, array('Paris', 'Berlin'), 'Only Paris and Berlin are available at the moment.');
+         * @todo wouldn't be IsOneOf the correct name?
+         * @param array $data
+         * @return boolean
+         */	
+		protected function validateISONEFROM($data) {
+			foreach ($this->args as $text)
+				if (strcmp($data[$this->field],$text)==0)
+					return true;	
 			return false;
 		}
 
 		/**
-		 * Validierung einer ISNOTONEFROM-Regel
-		 * Überprüft, ob der Inhalt des Feldes exakt einem der angegebenen Texte entspricht
-		 * 
-		 * Beispiel: $rule_NotParisAndBerlin = new NetefxValidatorRule("Flat", "ISNOTONEFROM", array("Paris","Berlin"), "Paris and Berlin are not available at the moment.");
-		 */
-		function validateIsNotOneFrom($data) {
-			foreach ($this->args as $text) {
-				if (strcmp($data[$this->field],$text)==0) {
+		 * Check if the field is not equal to one of the given strings
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule('Flat', NV_ISNOTONEFROM, array('Paris', 'Berlin'), 'Paris and Berlin are not available at the moment.');
+         * @todo wouldn't be IsNotOneOf the correct name?
+         * @param array $data
+         * @return boolean
+         */	
+		protected function validateISNOTONEFROM($data) {
+			foreach ($this->args as $text)
+				if (strcmp($data[$this->field],$text)==0)
 					return false;
-				}
-			}
 			return true;
 		}
-
+		
 		/**
-		 * Validierung einer MINCHARACTERS-Regel
-		 * Überprüft, ob der Inhalt des Feldes mindestens die angegebene Länge hat
-		 * 
-		 * Beispiel: $rule_FirstName_MinChar = new NetefxValidatorRule("FirstName", "MINCHARACTERS", array('2'), "Please enter at least two characters");
-		 */
-		function validateMinCharacters($data) {
-			if (!$this->checkNumeric($data,$this->args[0])) {
+		 * Check length of the field
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule('FirstName', NV_MINCHARACTERS, 2, 'Please enter at least two characters');
+         * @param array $data
+         * @return boolean
+         */	
+		protected function validateMINCHARACTERS($data) {
+			if (!$this->checkNumeric($data,$this->args[0]))
 				return false;
-			}
 			return (strlen(trim($data[$this->field])) >= $this->evaluate($data,$this->args[0]));
 		}
 
 		/**
-		 * Validierung einer MAXCHARACTERS-Regel
-		 * Überprüft, ob der Inhalt des Feldes höchstens die angegebene Länge hat
-		 * 
-		 * Beispiel: $rule_FirstName_MinChar = new NetefxValidatorRule("FirstName", "MINCHARACTERS", array('2'), "Please enter at least two characters");
-		 */
-		function validateMaxCharacters($data) {
-			if (!$this->checkNumeric($data,$this->args[0])) {
+		 * Check length of the field
+         * Called by $this->validate()
+         * @example $rule = new NetefxValidatorRule('FirstName', NV_MAXCHARACTERS, 2, 'Please enter no more than two characters');
+         * @param array $data
+         * @return boolean
+         */	
+		protected function validateMAXCHARACTERS($data) {
+			if (!$this->checkNumeric($data,$this->args[0]))
 				return false;
-			}
 			return (strlen(trim($data[$this->field])) <= $this->evaluate($data,$this->args[0]));
 		}
-
+		
 		/**
-		 * Validierung einer CHARACTERSBETWEEN-Regel
-		 * Überprüft, ob die Länge des Inhalts des Feldes zwischen den angegebenen Grenzen (eingeschlossen) liegt
-		 * 
-		 * Beispiel: $rule_FirstName_CharBetween = new NetefxValidatorRule("FirstName", "CHARACTERSBETWEEN", array('2','20'), "Please enter between 2 and 20 characters");
+		 * Check if field length is between 2 values
+		 * Called by $this->validate()
+		 * @example $rule = new NetefxValidatorRule("FirstName", NV_CHARACTERSBETWEEN, array(2, 20), 'Please enter between 2 and 20 characters');
+		 * @param array $data
+         * @return boolean
 		 */
-		function validateCharactersBetween($data) {
-			if (!$this->checkNumeric($data,$this->args[0])) {
+		protected function validateCHARACTERSBETWEEN($data) {
+			if (!$this->checkNumeric($data,$this->args[0]))
 				return false;
-			}
-			if (!$this->checkNumeric($data,$this->args[1])) {
+			if (!$this->checkNumeric($data,$this->args[1]))
 				return false;
-			}
 			return ((strlen(trim($data[$this->field])) >= $this->evaluate($data,$this->args[0])) &&
 			(strlen(trim($data[$this->field])) <= $this->evaluate($data,$this->args[1])));
 		}
-
+		
+		
 		/**
-         * Validierung einer UNIQUE-Regel 
+         * Validierung einer UNIQUE-Regel
          * Überprüft, ob es noch keinen ANDEREN Eintrag gibt, bei dem das übergebene Feld der übergebenen Klasse diesen Wert hat
          * 
          * Beispiel:  
          * $rule_email_1 = new NetefxValidatorRule("EMail", "UNIQUE",  array('EMail','Member'), "E-Mail schon vergeben");
          * 
          */
-        function validateUnique($data) {
-        	$new_value  = Convert::raw2sql($data[$this->field]);
-            $field_name = Convert::raw2sql($this->args[0]);
-			$class_name = Convert::raw2sql($this->args[1]);
-        	if (isset($data["ID"])) {
-        		$other_entry = DataObject::get($class_name,"".$field_name." = '".$new_value."' AND ".$class_name.".ID<>".(int)$data["ID"]); 
-        	}
-            else {
-            	$other_entry = DataObject::get($class_name,"".$field_name." = '".$new_value."'");     	
-            }
-            return ($other_entry) ? false : true; 
-        }
-
+		
+		
 		/**
-		 * Validierung einer FUNCTION-Regel
-		 * Überprüft, ob die angegebene Funktion true zurückgibt
-		 * 
-		 * Beispiel: siehe Library
+		 * Check if any other DataObject has the same value already
+		 * first argument is the DB field name, the second the classname and the third is optional the ID to excluse from the uniqe rule or the name of another field in the form (default is field ID in the form) 
+		 * Called by $this->validate()
+		 * @example $rule = new NetefxValidatorRule('Nickname', NV_UNIQUE, array('Nickname', 'Member', 'MemberID'), 'This Nickname is already in use.');
+		 * @param array $data
+         * @return boolean
 		 */
-		function validateFunction($data) {
-			$class = $this->args[0];
-			$function = $this->args[1];
-			$params = $this->args[2]; 
-			return call_user_func(array($class, $function), $data, $params);
-		}
-
+        protected function validateUNIQUE($data) {
+        	$new_value = Convert::raw2sql($data[$this->field]);
+            $field_name = $this->args[0];
+			$class_name = $this->args[1];
+			if (isset($this->args[2])) {
+				if (is_numeric($this->args[2]))
+					$id = $this->args[2];
+				elseif (isset($data[$this->args[2]]))
+					$id = (int)$data[$this->args[2]];
+			} else {
+				$id = (int)$data['ID'];
+			}
+        	if ($id > 0)
+        		$other_entry = DataObject::get_one($class_name,"$field_name = '$new_value' AND $class_name.ID<>".$id); 
+            else
+            	$other_entry = DataObject::get_one($class_name,"$field_name = '$new_value'");     	
+            return ($other_entry && $other_entry->exists()) ? false : true; 
+        }
+		
+		/**
+		 * Use a custom function to validate this field (the validator will pass 2 params to the custom function, first $data and as second the params you gave to the rule)
+		 * Called by $this->validate()
+		 * @todo test it, also test the examples
+		 * @example // this will call NetefxValidatorLibrary::min_number_checkboxes_checked($data, $args);<br>$class = 'NetefxValidatorLibrary'<br>$function = 'min_number_checkboxes_checked';<br>$args = array('field' => 'myField', 'min' => 5);<br>$rule = new NetefxValidatorRule("myField", NV_FUNCTION, array($class, $method, $args), 'this field is required');
+		 * @example // this will call $object->myValidationMethod($data, $args);<br> $object = new MyObject();<br>$function = 'myValidationMethod';<br>$args = array('fieldName' => 'myField', 'someOtherThing' => 'yay');<br>$rule = new NetefxValidatorRule("myField", NV_FUNCTION, array($object, $function, $args), 'this field is required');
+		 * @example $function = create_function('$data,$args', '$fieldName = $args["fieldName"]; if ($data[$fieldName] == "test") return true; else return false;');<br>$args = array('fieldName' => 'myField', 'someOtherThing' => 'yay');<br>$rule = new NetefxValidatorRule("myField", NV_FUNCTION, array($function, $args), 'this field is required');
+		 * @example // since PHP 5.3.0<br>$function = function ($data, $args) {<br>$fieldName = $args['fieldName'];<br>if ($data[$fieldName] == 'test')<br>return true;<br>else<br>return false;<br>}<br>$args = array('fieldName' => 'myField', 'someOtherThing' => 'yay');<br>$rule = new NetefxValidatorRule("myField", NV_FUNCTION, array($function, $args), 'this field is required');
+		 * @param array $data
+         * @return boolean
+		 */
+		protected function validateFUNCTION($data) {
+			if (is_callable($this->args[0])) {
+				$function = $this->args[0];
+				$params = (isset($this->args[1]))?array($data, $this->args[1]):array($data);
+			} elseif ((is_string($this->args[0]) || is_object($this->args[0])) && is_string($this->args[1])) {
+				$function = array($this->args[0], $this->args[1]);
+				$params = (isset($this->args[2]))?array($data, $this->args[2]):array($data);
+			}
+			return call_user_func_array($function, $params);
+		}		
 }
