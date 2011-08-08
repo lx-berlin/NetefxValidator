@@ -49,16 +49,33 @@ define("NV_FUNCTION","FUNCTION");
 
 
 class NetefxValidatorRule {
-	
-	
-	
-	
 		protected $field;
 		protected $type;
 		protected $args;		
 		protected $errorMsg;
 		protected $errorMsgType;
-		
+
+		/**
+		 * Gibt das Feld zurück, zu dem diese Regel gehört
+		 */		
+		function field(){
+			return $this->field;
+		}
+
+		/**
+		 * Gibt die Fehlermeldung zu dieser Regel zurück
+		 */	
+		function errorMsg(){
+			return $this->errorMsg;
+		}
+
+		/**
+		 * Gibt den Typ der Fehlermeldung zu dieser Regel zurück
+		 */	
+		function errorMsgType(){
+			return $this->errorMsgType;
+		}
+
 		/**
 		 * Der Konstruktor erwartet folgende Argumente:
 		 * - das Feld, für das die Regel gilt
@@ -75,7 +92,7 @@ class NetefxValidatorRule {
 			$this->errorMsg= $errorMsg;
 			$this->errorMsgType= $errorMsgType;
 		}
-		
+
 		/**
 		 * Wertet den übergebenen Ausdruck aus, wobei Namen von anderen Feldern in die Zeichen @ und ~ eingeschlossen sind.
 		 * Aus Sicherheitsgründen und da nur mit Zahlen gerechnet werden kann, muss unbedingt vorher checkNumeric() aufgerufen werden.
@@ -86,7 +103,7 @@ class NetefxValidatorRule {
 			$expr = "return ".$expr.";";
 			return eval($expr);
 		}
-		
+
 		/**
 		 * Überprüft, ob die im Ausdruck enthaltenen Felder nur Zahlen enthalten
 		 */
@@ -109,7 +126,26 @@ class NetefxValidatorRule {
 			}
 			while (true);
 		}
-		
+
+        /**
+        * wandelt z.B. deutsche Zahleneingaben ins englische Format um
+        * 
+        * @param string $number
+        * @param string $separator ("." oder ",")
+        */
+		function numberFormatConversion($number, $separator) {
+            
+			if (preg_match("/^[0-9".$separator."]{1,}$/", $number)>0) {
+				$number = str_replace($separator,".",$number);           
+	            return $number;
+			}
+			
+			else {
+				return false;
+			}
+			
+        }
+
 		/**
 		 * Validiert die Regel anhand der übergebenen Daten
 		 */
@@ -123,7 +159,7 @@ class NetefxValidatorRule {
 				return false;
 			}
 		}
-		
+
 		/**
          * Validierung einer REQUIRED-Regel
          * Überprüft, ob überhaupt etwas in das Feld eingetragen ist
@@ -135,7 +171,7 @@ class NetefxValidatorRule {
         function validateRequired($data) {
             return ($data[$this->field] != '');
         }
-        
+
         /**
          * Validierung einer EMPTY-Regel
          * Überprüft, ob nichts ins Feld eingetragen ist
@@ -147,7 +183,7 @@ class NetefxValidatorRule {
         function validateEmpty($data) {
             return ($data[$this->field] == '');
         }
-        
+
         /**
          * Validierung einer EXISTS-Regel
          * Überprüft, ob es das Feld überhaupt gibt im Formular
@@ -162,7 +198,7 @@ class NetefxValidatorRule {
         function validateExists($data) {
 	        return (isset($data[$this->field]));
         }
-        
+
         /**
 		 * Validierung einer OR-Regel
 		 * Überprüft, ob mindestens eine der Subregeln, aus denen diese Regel besteht, gültig sind.
@@ -176,7 +212,7 @@ class NetefxValidatorRule {
 			}  
 			return false;
 		}
-		
+
         /**
 		 * Validierung einer AND-Regel
 		 * Überprüft, ob alle Subregeln, aus denen diese Regel besteht, gültig sind.
@@ -190,7 +226,7 @@ class NetefxValidatorRule {
 			}  
 			return true;
 		}
-		
+
         /**
 		 * Validierung einer NOT-Regel
 		 * Überprüft, ob die Subregeln, aus denen diese Regel besteht, nicht erfüllt ist.
@@ -199,7 +235,7 @@ class NetefxValidatorRule {
 		function validateNot($data) {
 			return (!($this->args[0]->validate($data)));
 		}
-		
+
         /**
 		 * Validierung einer IMPLIES-Regel
 		 * Überprüft, ob nachfolgende Bedingung erfüllt ist: wenn die erste Regel erfüllt ist, muss es auch die zweite sein.
@@ -213,7 +249,7 @@ class NetefxValidatorRule {
 				return true;
 			}
 		}
-		
+
         /**
 		 * Validierung einer XOR-Regel
 		 * Überprüft, ob nachfolgende Bedingung erfüllt ist: entweder die erste Regel oder die zweite muss erfüllt sein (aber nicht beide)
@@ -227,7 +263,7 @@ class NetefxValidatorRule {
 				return ($this->args[1]->validate($data));
 			}
 		}
-		
+
 		/**
 		 * Validierung einer GREATER-Regel
 		 * Überprüft, ob der Inhalt des Feldes numerisch ist und größer als der angegebene Ausdruck
@@ -248,28 +284,8 @@ class NetefxValidatorRule {
 			}
 			
 			return ($data[$this->field] > $this->evaluate($data,$this->args[0]));
-		}
-		
-        /**
-        * wandelt z.B. deutsche Zahleneingaben ins englische Format um
-        * 
-        * @param string $number
-        * @param string $separator ("." oder ",")
-        */
-		function numberFormatConversion($number, $separator) {
-            
-			if (preg_match("/^[0-9".$separator."]{1,}$/", $number)>0) {
-				$number = str_replace($separator,".",$number);           
-	            return $number;
-			}
-			
-			else {
-				return false;
-			}
-			
-        }
-        
-        
+		} 
+
         /**
          * Validierung einer GREATEREQUAL-Regel
          * Überprüft, ob der Inhalt des Feldes numerisch ist und größer gleich dem angegebenen Ausdruck
@@ -286,26 +302,7 @@ class NetefxValidatorRule {
             }
             return ($data[$this->field] >= $this->evaluate($data,$this->args[0]));
         }
-        
-        /* Der Wert wurde vom User mit , als Trennzeichen eingegeben (also in deutscher Schreibweise)
-		 
-		function validateGreaterEqualGermanFloat($data) {
-            
-            $data[$this->field] = $this->numberFormatConversion($data[$this->field], (isset($this->args[1]) ? $this->args[1] : "."));
-            
-            $wert = str_replace(".","",$data[$this->field]);
-			$wert = str_replace(",",".",$wert);
-            if (!is_numeric($wert)) {		
-				return false;
-			}
-            
-            if (!$this->checkNumeric($data,$this->args[0])) {
-				return false;
-			}
-            return ($wert >= $this->evaluate($data,$this->args[0]));
-		}
-		*/
-        
+
         /**
 		 * Validierung einer SMALLER-Regel
 		 * Überprüft, ob der Inhalt des Feldes numerisch ist und kleiner als der angegebene Ausdruck
@@ -324,7 +321,7 @@ class NetefxValidatorRule {
 			}
 			return ($data[$this->field] < $this->evaluate($data,$this->args[0]));
 		}
-		
+
 		/**
 		 * Validierung einer SMALLEREQUAL-Regel
 		 * Überprüft, ob der Inhalt des Feldes numerisch ist und kleiner gleich dem angegebenen Ausdruck
@@ -343,7 +340,7 @@ class NetefxValidatorRule {
 			}
 			return ($data[$this->field] <= $this->evaluate($data,$this->args[0]));
 		}
-		
+
 		/**
 		 * Validierung einer EQUALS-Regel
 		 * Überprüft, ob der Inhalt des Feldes numerisch ist und gleich dem angegebenen Ausdruck
@@ -362,7 +359,7 @@ class NetefxValidatorRule {
 			}
 			return ($data[$this->field] == $this->evaluate($data,$this->args[0]));
 		}
-		
+
 		/**
 		 * Validierung einer BETWEEN-Regel
 		 * Überprüft, ob der Inhalt des Feldes numerisch ist und zwischen den angegebenen Ausdrücken (Grenzen eingeschlossen) liegt
@@ -386,7 +383,7 @@ class NetefxValidatorRule {
 			return (($data[$this->field] <= $this->evaluate($data,$this->args[1])) &&
 			        ($data[$this->field] >= $this->evaluate($data,$this->args[0])));
 		}
-		
+
 		/**
 		 * Validierung einer REGEXP-Regel
 		 * Überprüft, ob der Inhalt des Feldes dem angegebenen regulären Ausdruck gehorcht
@@ -396,7 +393,7 @@ class NetefxValidatorRule {
 		function validateRegExp($data) {
 			return preg_match($this->args[0], $data[$this->field])>0;
 		}
-		
+
 		/**
 		 * Validierung einer TEXTEQUALS-Regel
 		 * Überprüft, ob der Inhalt des Feldes dem Inhalt des angegebenen Feldes entspricht
@@ -406,7 +403,7 @@ class NetefxValidatorRule {
 		function validateTextEquals($data) {
 			return (strcmp($data[$this->field],$data[$this->args[0]])==0);
 		}
-		
+
 		/**
 		 * Validierung einer TEXTIS-Regel
 		 * Überprüft, ob der Inhalt des Feldes exakt dem angegebenen Text entspricht
@@ -416,7 +413,7 @@ class NetefxValidatorRule {
 		function validateTextIs($data) {
 			return (strcmp($data[$this->field],$this->args[0])==0);
 		}
-		
+
 		/**
 		 * Validierung einer TEXTCONTAINS-Regel
 		 * Überprüft, ob der Inhalt des Feldes den angegebenen Text enthält
@@ -427,7 +424,7 @@ class NetefxValidatorRule {
 			$pos = strpos ($data[$this->field],$this->args[0]);
 			return ($pos !== false);
 		}
-		
+
 		/**
 		 * Validierung einer ISONEFROM-Regel
 		 * Überprüft, ob der Inhalt des Feldes exakt einem der angegebenen Texte entspricht
@@ -457,7 +454,7 @@ class NetefxValidatorRule {
 			}
 			return true;
 		}
-		
+
 		/**
 		 * Validierung einer MINCHARACTERS-Regel
 		 * Überprüft, ob der Inhalt des Feldes mindestens die angegebene Länge hat
@@ -470,7 +467,7 @@ class NetefxValidatorRule {
 			}
 			return (strlen(trim($data[$this->field])) >= $this->evaluate($data,$this->args[0]));
 		}
-		
+
 		/**
 		 * Validierung einer MAXCHARACTERS-Regel
 		 * Überprüft, ob der Inhalt des Feldes höchstens die angegebene Länge hat
@@ -483,7 +480,7 @@ class NetefxValidatorRule {
 			}
 			return (strlen(trim($data[$this->field])) <= $this->evaluate($data,$this->args[0]));
 		}
-		
+
 		/**
 		 * Validierung einer CHARACTERSBETWEEN-Regel
 		 * Überprüft, ob die Länge des Inhalts des Feldes zwischen den angegebenen Grenzen (eingeschlossen) liegt
@@ -500,8 +497,7 @@ class NetefxValidatorRule {
 			return ((strlen(trim($data[$this->field])) >= $this->evaluate($data,$this->args[0])) &&
 			(strlen(trim($data[$this->field])) <= $this->evaluate($data,$this->args[1])));
 		}
-		
-		
+
 		/**
          * Validierung einer UNIQUE-Regel 
          * Überprüft, ob es noch keinen ANDEREN Eintrag gibt, bei dem das übergebene Feld der übergebenen Klasse diesen Wert hat
@@ -522,7 +518,7 @@ class NetefxValidatorRule {
             }
             return ($other_entry) ? false : true; 
         }
-		
+
 		/**
 		 * Validierung einer FUNCTION-Regel
 		 * Überprüft, ob die angegebene Funktion true zurückgibt
@@ -535,35 +531,5 @@ class NetefxValidatorRule {
 			$params = $this->args[2]; 
 			return call_user_func(array($class, $function), $data, $params);
 		}
-		
-		/**
-		 * Gibt das Feld zurück, zu dem diese Regel gehört
-		 */		
-		function field(){
-			return $this->field;
-		}
-		
-		/**
-		 * Gibt die Fehlermeldung zu dieser Regel zurück
-		 */	
-		function errorMsg(){
-			return $this->errorMsg;
-		}
-		
-		/**
-		 * Gibt den Typ der Fehlermeldung zu dieser Regel zurück
-		 */	
-		function errorMsgType(){
-			return $this->errorMsgType;
-		}
-		
-        
-        
-        
-		
-		
-		
+
 }
-
-
-?>
