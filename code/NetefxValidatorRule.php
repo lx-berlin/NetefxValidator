@@ -3,10 +3,8 @@
 /**
 * RuleClass for NetefxValidator
 * 
-* @version 0.45
+* @version 0.46
 * @package NetefxValidator
-* 
-* new in 0.44: Konstanten
 */
 
 // basic rules
