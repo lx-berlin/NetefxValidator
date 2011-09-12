@@ -2,43 +2,56 @@
 
 /**
 * NetefxValidator
-* @abstract special validationclass, that makes use of different validation rules
 * 
 * @version 0.45
 * @package NetefxValidator 
+* @author lx-berlin
+* @author zauberfisch
 */
 
 class NetefxValidator extends Validator {
 	
 	protected $rules;
-	protected $useLabels = true;
+	protected $javascriptValidationHandler = 'none';
 
 	/**
-	 * Der Konstruktor erwartet ein Array von NetefxValidatorRule-Objekten,
-	 * die alle für die Validierung verwendeten Regeln enthält.
+	 * @return array
 	 */
-	function __construct() {
-		$Rules = func_get_args();
-		if( isset($Rules[0]) && is_array( $Rules[0] ) )
-			$Rules = $Rules[0];
-		$this->rules= $Rules;
-
+	public function getRules() {
+		return $this->rules;
+	}
+	
+	/**
+	 * if the first parameter is not an array, or we have more than one parameter, collate all parameters to an array, otherwise use the passed array
+	 * @param array|mixed $items
+	 */
+	public function setRules($items = null) {
+		$this->rules = (!is_array($items) || count(func_get_args()) > 1) ? func_get_args() : $items;
+	}
+	
+	/**
+	 * if the first parameter is not an array, or we have more than one parameter, collate all parameters to an array, otherwise use the passed array
+	 * @param array|mixed $items
+	 */
+	public function __construct() {
+		$this->setRules(func_get_args());
 		parent::__construct();
+		
 	}
 
-
+	
 	/**
-	 * Javascript-Validierung ist nicht vorgesehen
+	 * javascript not implemented yet
+	 * @return string
 	 */
 	function javascript() {
 		$js = "";
 		return $js;
 	}
 
-
 	/**
-	* Die eigentliche Validierung: ruft alle Regeln auf und zeigt ggf.
-	* Validierungsfehler an
+	* calls validate() on all fields and rules
+	* @return boolean
 	*/
 	function php($data) {
 		$valid = true;
@@ -51,9 +64,9 @@ class NetefxValidator extends Validator {
 			foreach($this->rules as $rule) { 
 				
 				if (!$rule->validate($data)) {
-					$errorMessage = $rule->errorMsg();
-					$errorMessageType = $rule->errorMsgType();
-					$fieldName = $rule->field();
+					$errorMessage = $rule->getErrorMessage();
+					$errorMessageType = $rule->getErrorMessageType();
+					$fieldName = $rule->getField();
 	 
 					$this->validationError(
 							$fieldName,
@@ -71,5 +84,3 @@ class NetefxValidator extends Validator {
 	}
 		
 }
-
-?>
