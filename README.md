@@ -4,8 +4,8 @@ this module gives you a bunch of validation rules for any kind of form validatio
 
 ## Maintainers ##
 
- * author lx-berlin
- * author zauberfisch
+ * lx-berlin
+ * zauberfisch
 
 ## TODO ##
  
