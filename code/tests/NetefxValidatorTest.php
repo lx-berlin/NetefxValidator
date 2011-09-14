@@ -685,7 +685,7 @@ class NetefxValidatorTest extends SapphireTest {
 		$this->assertTrue($rule->validate($data));
 	}
 
-	public function testISONEFROM() {
+	public function testINARRAY() {
 		$rule = new NetefxValidatorRuleINARRAY('testField', null, null, array('zauberfisch', 'is', 'awesum'));
 
 		$data = array('testField' => 'zauberfisch is awesum');
@@ -701,7 +701,7 @@ class NetefxValidatorTest extends SapphireTest {
 		$this->assertFalse($rule->validate($data));
 	}
 	
-	public function testISNOTONEFROM() {
+	public function testNOTINARRAY() {
 		$rule = new NetefxValidatorRuleNOTINARRAY('testField', null, null, array('zauberfisch', 'is', 'awesum'));
 
 		$data = array('testField' => 'zauberfisch is awesum');
