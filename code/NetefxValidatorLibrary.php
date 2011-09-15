@@ -5,9 +5,8 @@
 * 
 * @version 0.45 (28.07.2011)
 * @package NetefxValidator
-* 
-* new in 0.45: checkboxes_no_overlapping
-* new in 0.44: min_number_many_DOM_checked, max_number_many_DOM_checked
+* @todo translate comments
+* @todo fix examples
 */
 
 class NetefxValidatorLibrary {
@@ -361,5 +360,3 @@ class NetefxValidatorLibrary {
         
         
 }
-
-?>
