@@ -64,12 +64,10 @@ abstract class NetefxValidatorRule extends Object {
 		}
 		
 		/**
-		 * Check if the given field is filled out
-         * @example $rule = new NetefxValidatorRuleREQUIRED("FirstName", null, "FirstName is required");
 		 * @param string $field name of the field
 		 * @param string $errorMsg the message to be displayed
-		 * @param string|array $args additional arguments needed in speical rules like FUNCTION 
 		 * @param string $errorMsgType the css class added to the field on validation error
+		 * @param mixed $args additional arguments needed in speical rules like FUNCTION
 		 */
 		public function __construct($field, $errorMsg = null, $errorMsgType = 'error', $args = null) {	
 			parent::__construct();
