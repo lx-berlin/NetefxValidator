@@ -3,7 +3,7 @@
 /**
 * NetefxValidator
 * 
-* @version 0.45
+* @version 0.7 (because Zauberfisch made a lot of changes. And its no more compatible to version 0.45)
 * @package NetefxValidator 
 * @author lx-berlin
 * @author zauberfisch

@@ -127,13 +127,11 @@ abstract class NetefxValidatorRule extends Object {
         }
         
 		/**
-		 * This function needs to be overwritten
-		 * @param array $data
-		 * @return boolean
-		 */
-		public function validate($data) {
-			user_error('This function needs to be overwritten');
-		}
+         * This function needs to be overwritten
+         * @param array $data
+         * @return boolean
+         */
+        abstract public function validate($data);
 		
 		public function jsValidation() {}
 }
