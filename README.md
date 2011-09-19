@@ -9,8 +9,6 @@ this module gives you a bunch of validation rules for any kind of form validatio
 
 ## TODO ##
  
- * Translate NetefxValidatorLibrary commtents
- * fix NetefxValidatorLibrary examples
  * NetefxValidatorRuleGREATER and some other rules have a couple of lines in common to check the input, that should be moved into 1 function
 
 ## Documentation ##
