@@ -3,10 +3,8 @@
 /**
 * LibraryFunctions for Dates for NetefxValidator
 * 
-* @version 0.5 (15.09.2011)
+* @version 0.7 (19.09.2011)
 * @package NetefxValidator
-* @todo translate comments
-* @todo fix examples
 */
 
 class NetefxValidatorLibraryDate {
@@ -16,10 +14,8 @@ class NetefxValidatorLibraryDate {
 		
      /** Date is at least x days in past
        *        
-       * @example $rule_vergangenheit_1  = new NetefxValidatorRule("Vergangenheit",  "FUNCTION",   array('NetefxValidatorLibrary', 
-                                                                                                   'DateIsMinDaysBeforeToday', 
-                                                                                                   array('date'  => 'Vergangenheit', 
-                                                                                                         'min'       => 1)),  "Das Feld Vergangenheit muss ein Datum in der Vergangenheit enthalten");               
+       * $rule_past_1    = new NetefxValidatorRuleFUNCTION ("End", "End must be in past",'error',
+       *          											array('NetefxValidatorLibraryDate', 'DateIsMinDaysBeforeToday', array('date'  => 'End', 'min'   => 1)));               
     */
         
         static function DateIsMinDaysBeforeToday ($data, $args) {
@@ -50,11 +46,10 @@ class NetefxValidatorLibraryDate {
         
         
      /** Date is at least x days in future
-       *        
-       * @example$rule_zukunft_1  = new NetefxValidatorRule("Zukunft",  "FUNCTION",     array('NetefxValidatorLibrary', 
-                                                                                                   'DateIsMinDaysAfterToday', 
-                                                                                                   array('date'  => 'Zukunft', 
-                                                                                                         'min'       => 1)),  "Das Feld Zukunft muss ein Datum in der Zukunft enthalten");               
+       * 
+       * $rule_future_1    = new NetefxValidatorRuleFUNCTION ("Begin", "Begin must be at least for days in future",'error',
+       *          											array('NetefxValidatorLibraryDate', 'DateIsMinDaysAfterToday', array('date'  => 'Begin', 'min'   => 4)));               
+       *                      
     */
         
         static function DateIsMinDaysAfterToday ($data, $args) {
@@ -84,13 +79,11 @@ class NetefxValidatorLibraryDate {
         }
         
         /** date B is at least x days after date A
-         *        
-         * @example $rule_bis  = new NetefxValidatorRule("bis",  "FUNCTION",  array('NetefxValidatorLibrary', 
-                                                                              'UntilIsMinDaysAfterFromOptional',
-                                                                              array('dateFrom'  => 'von',
-                                                                              		'dateUntil' => 'bis',
-                                                                              		'min'       => 0)),  "bis darf nicht vor vor sein");               
-        */
+         *     
+         * $rule_time_1    = new NetefxValidatorRuleFUNCTION ("End", "Begin must not be after End",'error',
+         *          											array('NetefxValidatorLibraryDate', 'UntilIsMinDaysAfterFrom', array('dateFrom'  => 'Begin', 'dateUntil' => 'End', 'min'   => 0)));               
+         *      
+         */
         
         static function UntilIsMinDaysAfterFrom ($data, $args) {
             
@@ -120,11 +113,6 @@ class NetefxValidatorLibraryDate {
         /**
          * date B is at least x days after date A (both empty allowed)
          * 
-         * @example     	$rule_bis  = new NetefxValidatorRule("bis",  "FUNCTION",     array('NetefxValidatorLibrary', 
-                                                                                               'UntilIsMinDaysAfterFromOptional', 
-                                                                                               array('dateFrom'  => 'von', 
-                                                                                                     'dateUntil' => 'bis',
-                                                                                                     'min'       => 0)),  "bis darf nicht vor vor sein");  
          */
 		static function UntilIsMinDaysAfterFromOptional ($data, $args) {
             

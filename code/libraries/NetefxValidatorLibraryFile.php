@@ -3,10 +3,8 @@
 /**
 * LibraryFunctions for Files for NetefxValidator
 * 
-* @version 0.5 (15.09.2011)
+* @version 0.7 (19.09.2011)
 * @package NetefxValidator
-* @todo translate comments
-* @todo fix examples
 */
 
 class NetefxValidatorLibraryFile {
@@ -17,10 +15,8 @@ class NetefxValidatorLibraryFile {
   
          /** check for allowed mime types for an upload (if exists)
          * 
-         * @example  $rule_datei_1  = new NetefxValidatorRule("Datei",  "FUNCTION",    array('NetefxValidatorLibrary', 
-                                                                                                   'check_mime_types', 
-                                                                                                   array('field'  => 'Datei', 
-                                                                                                         'allowedMimeTypes' => array("application/pdf","application/msword","x-unknown/x-unknown"))), "falscher Typ der Datei");
+         * @example  $rule_file_1  = new NetefxValidatorRuleFUNCTION("File", "wrong file type", 'error', 
+         *   														array('NetefxValidatorLibraryFile', 'check_mime_types', array('field'  => 'File', 'allowedMimeTypes' => array("application/pdf","application/msword","x-unknown/x-unknown"))));
          */
         static function check_mime_types ($data, $args) {
             $field = $args["field"];
@@ -38,9 +34,8 @@ class NetefxValidatorLibraryFile {
         
         /** check if file for an upload exists (for required uploads)
          * 
-         * @example   $rule_bild_1 = new NetefxValidatorRule("Image",   "FUNCTION",    array('NetefxValidatorLibrary', 
-                                                                                                   'check_file_exists', 
-                                                                                                   array('field'  => 'Image')), "Foto ist Pflicht");
+         * @example   $rule_image_1 = new NetefxValidatorRuleFUNCTION("Image", "you need to upload a photo", 'error',
+         * 															  array('NetefxValidatorLibraryFile','check_file_exists', array('field'  => 'Image')));
          */
         static function check_file_exists ($data, $args) {
             $field = $args["field"];
@@ -50,11 +45,8 @@ class NetefxValidatorLibraryFile {
         
         /** check if file has correct size (0 for unlimited values) 
          * 
-         * @example   $rule_datei_2  = new NetefxValidatorRule("Datei",  "FUNCTION",    array('NetefxValidatorLibrary', 
-                                                                                                   'check_file_size', 
-                                                                                                   array('field'  => 'Datei', 
-                                                                                                         'minSize' =>  0,
-                                                                                                         'maxSize' => 10000)), "Datei darf maximal 10000 Bytes haben");
+         * @example   $rule_file_2  = new NetefxValidatorRuleFUNCTION("File", "Maximal file size is 10000 bytes", 'error'
+         * 															  array('NetefxValidatorLibraryFile', 'check_file_size', array('field'  => 'File', 'minSize' =>  0, 'maxSize' => 10000)));
         */           
         
         static function check_file_size ($data, $args) {
@@ -77,13 +69,9 @@ class NetefxValidatorLibraryFile {
         
         /** check if image has correct width and height (0 for unlimited values) 
          * 
-         * @example   $rule_bild_3  = new NetefxValidatorRule("Image",  "FUNCTION",    array('NetefxValidatorLibrary', 
-                                                                                                   'check_image_size', 
-                                                                                                   array('field'  => 'Image', 
-                                                                                                         'minWidth' => 10,
-                                                                                                         'maxWidth' => 0,
-                                                                                                         'minHeight' => 0,
-                                                                                                         'maxHeight' => 500)), "Breite des Bildes muss mindestens 10 sein, Höhe maximal 500");
+         * @example   $rule_image_3  = new NetefxValidatorRuleFUNCTION("Image",  "image width at least 10, image height at most 500", 'error', 
+         * 																array('NetefxValidatorLibraryFile', 'check_image_size', 
+         * 																	array('field'  => 'Image', 'minWidth' => 10, 'maxWidth' => 0, 'minHeight' => 0, 'maxHeight' => 500)));
         */    
 
         static function check_image_size ($data, $args) {

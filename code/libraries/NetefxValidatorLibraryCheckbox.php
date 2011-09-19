@@ -3,10 +3,8 @@
 /**
 * LibraryFunctions for Checkboxes for NetefxValidator
 * 
-* @version 0.5 (15.09.2011)
+* @version 0.7 (19.09.2011)
 * @package NetefxValidator
-* @todo translate comments
-* @todo fix examples
 */
 
 class NetefxValidatorLibraryCheckbox {
@@ -71,8 +69,6 @@ class NetefxValidatorLibraryCheckbox {
         	$field = $args["field"];
             $max   = (int)$args["max"];
             
-            //if ($field=="TargetCountries") debug::show($data[$field]);
-            
             if ($data[$field]=="") return true;
             
             $checked = 0;
@@ -85,10 +81,8 @@ class NetefxValidatorLibraryCheckbox {
                 
         /** there is no overlapping of the checked items of two checkboxes 
         * 
-        * @example  $rule_excludedPersons_notInvited = new NetefxValidatorRule ("excludedPersons", NV_FUNCTION, array('NetefxValidatorLibrary',
-                                                                                                               'checkboxes_no_overlapping',
-                                                                                                               array('field' => 'excludedPersons',
-                                                                                                                     'otherField' => 'invitedPersons')),  "you cannot invite a person and exclude her as well");   
+        * @example  $rule_excludedPersons_notInvited = new NetefxValidatorRuleFUNCTION ("excludedPersons", "you cannot invite a person and exclude her as well", 'error', 
+        * 																				array('NetefxValidatorLibraryCheckbox', 'checkboxes_no_overlapping', array('field' => 'excludedPersons', otherField' => 'invitedPersons')));   
         */
         static function checkboxes_no_overlapping ($data, $args) {
         	
