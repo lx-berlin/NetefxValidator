@@ -23,8 +23,8 @@ class NetefxValidatorRuleFUNCTION extends NetefxValidatorRule {
 		}
 		
 		/**
-         * @param array $data
-         * @return boolean
+		 * @param array $data
+		 * @return boolean
 		 */
 		public function validate($data) {
 			$args = $this->getArgs();
@@ -33,12 +33,15 @@ class NetefxValidatorRuleFUNCTION extends NetefxValidatorRule {
 				'args' => null
 			);
 			if (is_callable($args[0])) {
+				// Anonymous function
 				$function = $args[0];
 				if (count($args) > 1) $params['args'] = $args[1];
 			} elseif ((is_string($args[0]) || is_object($args[0])) && isset($args[1]) && is_string($args[1])) {
+				// classname + static method name OR object + method name to be called by call_user_func_array
 				$function = array($args[0], $args[1]);
 				if (count($args) > 2) $params['args'] = $args[2];
 			} else {
+				// code seems to be a string, run it with eval
 				if (count($args) > 1) $params['args'] = $args[1];
 				return eval($args[0]);
 			}
