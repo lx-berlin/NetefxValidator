@@ -1,5 +1,7 @@
 # Silverstripe Validator Module #
 
+(This branch is for Silverstripe3)
+
 this module gives you a bunch of validation rules for any kind of form validation.
 
 ## Maintainers ##
