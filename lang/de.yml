@@ -1,0 +1,17 @@
+de:
+  NetefxValidatorRuleAND:
+    and: ' und '
+  NetefxValidatorRuleEMPTY:
+    ErrorMessage: '%s muss leer sein'
+  NetefxValidatorRuleGREATER:
+    ErrorMessage: '%s muss größer als %s sein'
+  NetefxValidatorRuleGREATEREQUAL:
+    ErrorMessage: '%s muss größer oder gleich %s sein'
+  NetefxValidatorRuleOR:
+    or: ' oder '
+  NetefxValidatorRuleREQUIRED:
+    ErrorMessage: '%s wird benötigt'
+  NetefxValidatorRuleSMALLER:
+    ErrorMessage: '%s muss kleiner als %s sein'
+  NetefxValidatorRuleSMALLEREQUAL:
+    ErrorMessage: '%s muss kleiner oder gleich %s sein'
