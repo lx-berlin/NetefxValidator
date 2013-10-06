@@ -1,5 +1,5 @@
 {
-	"name": "lxberlin/NetefxValidator",
+	"name": "lxberlin/netefx-validator",
 	"type": "silverstripe-module",
 	"keywords": ["silverstripe", "validation", "validator"],
 	"homepage" : "http://www.netefx.de/Silverstripe-NetefxValidator.php",
