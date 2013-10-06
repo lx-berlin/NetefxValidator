@@ -1,0 +1,31 @@
+{
+	"name": "lxberlin/NetefxValidator",
+	"type": "silverstripe-module",
+	"keywords": ["silverstripe", "validation", "validator"],
+	"description": "NetefxValidator is a class for form validation, so it replaces the RequiredFields() validator.Features:" +
+"A lot of build in validationrules" +
+"logical rule combination" +
+"validationrule for unique database fields" +
+"custom validation functions" +
+"works in getCMSValidator() in Modeladmin" +
+"..." +
+"There is no javascript validation at all. So you can disable js-validation in your _config.php" +
+"The latest version is now on https://github.com/lx-berlin/NetefxValidator" +
+"Documentation: http://www.netefx.de/Silverstripe-NetefxValidator.php",
+
+	"license": "BSD-3-Clause",
+	"authors": [
+	{
+		"name": "Alex Klein",
+		"homepage": "http://www.netefx.de",
+		"email": "alexk@netefx.de"
+	},
+	{
+		"name": "Zauberfisch",
+	}
+	],
+	"require": {
+		"silverstripe/framework": "2.4.*, 3.0.*",
+		"silverstripe/cms": "2.4.*, 3.0.*"
+	}
+}
