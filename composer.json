@@ -13,7 +13,7 @@
 		"name": "Zauberfisch"
 	}],
 	"require": {
-		"silverstripe/framework": "2.4.*, 3.*",
-		"silverstripe/cms": "2.4.*, 3.*"
+		"silverstripe/framework": ">=2.4",
+		"silverstripe/cms": ">=2.4"
 	}
 }
